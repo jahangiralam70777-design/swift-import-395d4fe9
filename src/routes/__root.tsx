@@ -261,6 +261,14 @@ function RootInner() {
   const redirectTo = useMemo(() => {
     if (typeof window === "undefined") return null;
     if (user && AUTH_ROUTES.includes(path)) {
+      // Never bounce a signed-in user off /admin/login to /dashboard —
+      // that's the source of the "admin menu → /dashboard" loop when the
+      // store still holds a stale default role of "student" while the
+      // real role is being resolved. Only auto-forward confirmed admins;
+      // everyone else stays put on the admin sign-in page.
+      if (path === "/admin/login") {
+        return user.role === "admin" ? "/admin" : null;
+      }
       return user.role === "admin" ? "/admin" : "/dashboard";
     }
     if (!hasPersistedSession && (isAdminRoute || isStudentRoute)) return "/login";
