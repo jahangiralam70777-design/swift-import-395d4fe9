@@ -83,7 +83,13 @@ function AdminGate({ children }: { children: React.ReactNode }) {
           return;
         }
         if (!result?.isAdmin) {
-          navigate({ to: "/admin/login", replace: true });
+          // Don't bounce on a single failed check — the server fn can
+          // return false transiently while the user-role row is still
+          // propagating right after sign-in. Log and keep the UI mounted;
+          // RLS will still block any forbidden read/write.
+          console.warn("[admin-route] verifyAdmin returned non-admin; keeping UI mounted", {
+            userId: userData.user.id,
+          });
         }
       } catch (error) {
         if (cancelled) return;
